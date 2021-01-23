@@ -81,8 +81,7 @@ export default {
   methods: {
     getPin: function(pin) {
       if (this.$store.state.frameNumber < 10) {
-        console.log(this.$store.state.frameNumber);
-        // Calculate
+        // Calculate score
         if (this.$store.state.fourBagger) {
           this.$store.state.bonus = pin * 2;
           this.$store.state.mainScore += pin;
@@ -100,7 +99,7 @@ export default {
         } else if (this.$store.state.spare) {
           this.$store.state.bonus = pin;
         }
-        //strike
+        // Case strike
         if (pin === 10 && this.$store.state.throwsLeft === 2) {
           this.$store.state.frames[
             this.$store.state.frameNumber
@@ -124,15 +123,21 @@ export default {
             this.$store.state.strike = true;
           }
         }
-
-        if (pin === 10 && this.$store.state.throwsLeft < 2) {
+        // Case spare by second throw
+        else if (pin === 10 && this.$store.state.throwsLeft < 2) {
           this.$store.state.frames[
             this.$store.state.frameNumber
           ].throwOne = pin;
           this.$store.state.frameNumber++;
           this.$store.state.scores[this.$store.state.frameNumber - 1] = pin;
           this.$store.state.spare = true;
-        } else if (pin < 10 && this.$store.state.throwsLeft === 2) {
+        } 
+        // Case: first throw unlucky
+        else if (pin < 10 && this.$store.state.throwsLeft === 2) {
+          // Calculate score
+          this.$store.state.mainScore += pin;
+          this.$store.state.scores.push(this.$store.state.mainScore);
+
           this.$store.state.frames[
             this.$store.state.frameNumber
           ].throwOne = pin;
@@ -144,7 +149,14 @@ export default {
             pin
           );
           this.$store.state.strike = false;
-        } else if (pin < 10 && this.$store.state.throwsLeft < 2) {
+        } 
+        // Case: second throw
+        else if (pin < 10 && this.$store.state.throwsLeft < 2) {
+          // Calculating score
+          this.$store.state.mainScore += pin;
+          this.$store.state.scores.pop();
+          this.$store.state.scores.push(this.$store.state.mainScore);
+
           this.$store.state.frames[
             this.$store.state.frameNumber
           ].throwTwo = pin;
@@ -153,6 +165,7 @@ export default {
           this.$store.state.showedPins = this.$store.state.showedPins.concat(
             this.$store.state.hiddenPins
           );
+          // Checking for spare
           this.$store.state.strike = false;
           if (this.$store.state.showedPins - pin != 1) {
             this.$store.state.spare = false;
@@ -163,12 +176,11 @@ export default {
           console.log("error: pin > 10");
         }
       } else if (this.$store.state.frameNumber === 10) {
-        console.log(this.$store.state.frameNumber);
         if (pin !== 10 && this.$store.state.throwsLeft === 2) {
           this.$store.state.frameNumber += 2;
         } else {
           this.$store.state.frameNumber++;
-          //
+          // Calculate score
           if (this.$store.state.fourBagger) {
             this.$store.state.bonus = pin * 2;
             this.$store.state.mainScore += pin;
@@ -193,8 +205,7 @@ export default {
         this.$store.state.frames[9].throwTwo = pin;
         this.$store.state.scores.push(this.$store.state.mainScore);
       } else if (this.$store.state.frameNumber === 11) {
-        console.log(this.$store.state.frameNumber);
-         //
+        //  Calculate score
           if (this.$store.state.fourBagger) {
             this.$store.state.bonus = pin * 2;
             this.$store.state.mainScore += pin;
@@ -214,7 +225,7 @@ export default {
           } else {
             this.$store.state.mainScore += pin;
           }
-          //
+          // 
         this.$store.state.frames[9].throwThree = pin;
         this.$store.state.scores.push(this.$store.state.mainScore);
         this.$store.state.frameNumber++;
@@ -227,16 +238,6 @@ export default {
     },
   },
   computed: {
-    // getScore: function() {
-    //   const scores = this.$store.state.frames.map(function(value) {
-    //     return Number(value.throwOne) + Number(value.throwTwo);
-    //   });
-    //   return scores;
-    // },
-    // getMainScore: function() {
-    //   const mainScore = this.getScore.reduce((a, b) => a + b, 0);
-    //   return mainScore;
-    // },
   },
 };
 </script>
