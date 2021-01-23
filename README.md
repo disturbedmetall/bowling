@@ -1,5 +1,7 @@
 # bowling_calculator
 
+https://disturbedmetall.github.io/bowling/
+
 ## Project setup
 ```
 npm install
