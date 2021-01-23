@@ -21,7 +21,7 @@
       <div class="frames__row">
         <div
           class="frame"
-          v-for="(frame, index) in $store.state.frames"
+          v-for="(frame, index) in frames"
           :key="index"
         >
           <p class="frame__number">{{ index + 1 }}</p>
@@ -41,7 +41,7 @@
               </div>
             </div>
             <div class="frame__score">
-              {{ $store.state.scores[index] }}
+              {{ scores[index] }}
             </div>
           </div>
         </div>
@@ -49,7 +49,7 @@
       <div class="main-score">
         <p class="main-score__description">Main score</p>
         <div class="main-score__number">
-          <h2>{{ $store.state.mainScore }}</h2>
+          <h2>{{ mainScore }}</h2>
         </div>
       </div>
     </div>
@@ -61,7 +61,7 @@
           class="knocked-pins__ammount"
           v-for="pin in 11"
           :key="pin"
-          v-show="$store.state.showedPins[pin - 1]"
+          v-show="showedPins[pin - 1]"
         >
           <button class="knocked-pins__button" v-on:click="getPin(pin - 1)">
             {{ pin - 1 }}
@@ -73,174 +73,33 @@
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex';
+
 export default {
   name: "BowlingComponent",
-  data() {
-    return {};
-  },
   methods: {
-    getPin: function(pin) {
-      if (this.$store.state.frameNumber < 10) {
-        // Case strike
-        if (pin === 10 && this.$store.state.throwsLeft === 2) {
-          this.$store.state.frames[
-            this.$store.state.frameNumber
-          ].throwOne = pin;
-          this.$store.state.frameNumber++;
-          // setting strikes
-          if (this.$store.state.fourBagger) {
-            this.$store.state.scores.push(this.$store.state.mainScore);
-          } else if (this.$store.state.turkey) {
-            this.$store.state.fourBagger = true;
-            this.$store.state.turkey = false;
-            this.$store.state.scores.push(this.$store.state.mainScore);
-          } else if (this.$store.state.double) {
-            this.$store.state.scores.push(this.$store.state.mainScore);
-            this.$store.state.turkey = true;
-            this.$store.state.double = false;
-          } else if (this.$store.state.strike) {
-            this.$store.state.double = true;
-            this.$store.state.strike = false;
-          } else {
-            this.$store.state.strike = true;
-          }
-        }
-        // Case spare by second throw
-        else if (pin === 10 && this.$store.state.throwsLeft < 2) {
-          this.$store.state.frames[
-            this.$store.state.frameNumber
-          ].throwOne = pin;
-          this.$store.state.frameNumber++;
-          this.$store.state.throwsLeft++;
-          this.$store.state.scores[this.$store.state.frameNumber - 1] = pin;
-          this.$store.state.spare = 'true';
-        } 
-        // Case: first throw unlucky
-        else if (pin < 10 && this.$store.state.throwsLeft === 2) {
-          // Calculate score
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-          this.$store.state.scores.push(this.$store.state.mainScore);
-
-          this.$store.state.frames[
-            this.$store.state.frameNumber
-          ].throwOne = pin;
-          this.$store.state.throwsLeft--;
-          this.$store.state.hiddenPins = this.$store.state.showedPins.slice(
-            11 - pin
-          );
-          this.$store.state.showedPins = this.$store.state.showedPins.slice(
-            pin
-          );
-          this.$store.state.strike = false;
-        } 
-        // Case: second throw
-        else if (pin < 10 && this.$store.state.throwsLeft < 2) {
-          // Calculating score
-          this.$store.state.mainScore += pin;
-          this.$store.state.scores.pop();
-          this.$store.state.scores.push(this.$store.state.mainScore);
-
-          this.$store.state.frames[
-            this.$store.state.frameNumber
-          ].throwTwo = pin;
-          this.$store.state.frameNumber++;
-          this.$store.state.throwsLeft++;
-          this.$store.state.showedPins = this.$store.state.showedPins.concat(
-            this.$store.state.hiddenPins
-          );
-          // Checking for spare
-          this.$store.state.strike = false;
-          if (this.$store.state.showedPins - pin != 1) {
-            this.$store.state.spare = false;
-          } else {
-            this.$store.state.spare = true;
-          }
-        } else if (pin > 12) {
-          console.log("error: pin > 10");
-        }
-        // Calculate score
-        if (this.$store.state.fourBagger) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.turkey) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.double) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.strike) {
-          this.$store.state.bonus = pin;
-        } else if (this.$store.state.spare) {
-          this.$store.state.bonus = pin;
-        }
-      } else if (this.$store.state.frameNumber === 10) {
-        if (pin !== 10 && this.$store.state.throwsLeft === 2) {
-          this.$store.state.frameNumber += 2;
-        } else {
-          this.$store.state.frameNumber++;
-          // Calculate score
-          if (this.$store.state.fourBagger) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.turkey) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.double) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.strike) {
-            this.$store.state.bonus = pin;
-          } else if (this.$store.state.spare) {
-            this.$store.state.bonus = pin;
-          } else {
-            this.$store.state.mainScore += pin;
-          }
-          //
-        }
-        this.$store.state.frames[9].throwTwo = pin;
-        this.$store.state.scores.push(this.$store.state.mainScore);
-      } else if (this.$store.state.frameNumber === 11) {
-        //  Calculate score
-          if (this.$store.state.fourBagger) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.turkey) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.double) {
-            this.$store.state.bonus = pin * 2;
-            this.$store.state.mainScore += pin;
-            this.$store.state.mainScore += this.$store.state.bonus;
-          } else if (this.$store.state.strike) {
-            this.$store.state.bonus = pin;
-          } else if (this.$store.state.spare) {
-            this.$store.state.bonus = pin;
-          } else {
-            this.$store.state.mainScore += pin;
-          }
-          // 
-        this.$store.state.frames[9].throwThree = pin;
-        this.$store.state.scores.push(this.$store.state.mainScore);
-        this.$store.state.frameNumber++;
-      } else {
-        console.log("game over");
-      }
-    },
-    reload: function() {
-      location.reload();
-    },
+    ...mapMutations([
+      'reload',
+      'getPin'
+    ])
   },
   computed: {
-  },
+    ...mapState([
+      'frames',
+      'showedPins',
+      'hiddenPins',
+      'throwsLeft',
+      'frameNumber',
+      'scores',
+      'mainScore',
+      'fourBagger',
+      'turkey',
+      'double',
+      'strike',
+      'spare',
+      'bonus',
+    ])
+  }
 };
 </script>
 
