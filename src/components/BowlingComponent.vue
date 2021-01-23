@@ -81,24 +81,6 @@ export default {
   methods: {
     getPin: function(pin) {
       if (this.$store.state.frameNumber < 10) {
-        // Calculate score
-        if (this.$store.state.fourBagger) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.turkey) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.double) {
-          this.$store.state.bonus = pin * 2;
-          this.$store.state.mainScore += pin;
-          this.$store.state.mainScore += this.$store.state.bonus;
-        } else if (this.$store.state.strike) {
-          this.$store.state.bonus = pin;
-        } else if (this.$store.state.spare) {
-          this.$store.state.bonus = pin;
-        }
         // Case strike
         if (pin === 10 && this.$store.state.throwsLeft === 2) {
           this.$store.state.frames[
@@ -129,13 +111,15 @@ export default {
             this.$store.state.frameNumber
           ].throwOne = pin;
           this.$store.state.frameNumber++;
+          this.$store.state.throwsLeft++;
           this.$store.state.scores[this.$store.state.frameNumber - 1] = pin;
-          this.$store.state.spare = true;
+          this.$store.state.spare = 'true';
         } 
         // Case: first throw unlucky
         else if (pin < 10 && this.$store.state.throwsLeft === 2) {
           // Calculate score
           this.$store.state.mainScore += pin;
+          this.$store.state.mainScore += this.$store.state.bonus;
           this.$store.state.scores.push(this.$store.state.mainScore);
 
           this.$store.state.frames[
@@ -174,6 +158,24 @@ export default {
           }
         } else if (pin > 12) {
           console.log("error: pin > 10");
+        }
+        // Calculate score
+        if (this.$store.state.fourBagger) {
+          this.$store.state.bonus = pin * 2;
+          this.$store.state.mainScore += pin;
+          this.$store.state.mainScore += this.$store.state.bonus;
+        } else if (this.$store.state.turkey) {
+          this.$store.state.bonus = pin * 2;
+          this.$store.state.mainScore += pin;
+          this.$store.state.mainScore += this.$store.state.bonus;
+        } else if (this.$store.state.double) {
+          this.$store.state.bonus = pin * 2;
+          this.$store.state.mainScore += pin;
+          this.$store.state.mainScore += this.$store.state.bonus;
+        } else if (this.$store.state.strike) {
+          this.$store.state.bonus = pin;
+        } else if (this.$store.state.spare) {
+          this.$store.state.bonus = pin;
         }
       } else if (this.$store.state.frameNumber === 10) {
         if (pin !== 10 && this.$store.state.throwsLeft === 2) {
