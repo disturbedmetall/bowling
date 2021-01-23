@@ -1,16 +1,22 @@
 <template>
-  <div id="app">
-    <BowlingComponent />
+  <div id="app" class="container">
+    <Heading />
+    <BowlingFrames />
+    <KnockedPins />
   </div>
 </template>
 
 <script>
-import BowlingComponent from "./components/BowlingComponent.vue";
+import Heading from './components/Heading.vue';
+import BowlingFrames from './components/BowlingFrames.vue';
+import KnockedPins from './components/KnockedPins.vue';
 
 export default {
   name: "App",
   components: {
-    BowlingComponent,
+    Heading,
+    BowlingFrames,
+    KnockedPins,
   },
 };
 </script>
@@ -30,5 +36,19 @@ body {
 }
 p {
   margin: 0;
+}
+.container {
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+
+  @media only screen and (min-width: 540px) {
+    width: 80%;
+  }
+
+  @media only screen and (min-width: 960px) {
+    width: 75%;
+    max-width: 60rem;
+  }
 }
 </style>
