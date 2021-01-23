@@ -19,7 +19,7 @@
 
     <div class="frames">
       <div class="frames__row">
-        <div class="frame" v-for="(frame, index) in frames" :key="index">
+        <div class="frame" v-for="(frame, index) in $store.state.frames" :key="index">
           <p class="frame__number">{{ index + 1 }}</p>
           <div class="frame__info">
             <div class="frame__throws">
@@ -37,7 +37,7 @@
               </div>
             </div>
             <div class="frame__score">
-              {{ getScore[index] }}
+              {{ $store.state.scores[index] }}
             </div>
           </div>
         </div>
@@ -45,7 +45,7 @@
       <div class="main-score">
         <p class="main-score__description">Main score</p>
         <div class="main-score__number">
-          <h2>{{ getMainScore }}</h2>
+          <h2>300</h2>
         </div>
       </div>
     </div>
@@ -57,7 +57,7 @@
           class="knocked-pins__ammount"
           v-for="pin in 11"
           :key="pin"
-          v-show="showedPins[pin - 1]"
+          v-show="$store.state.showedPins[pin - 1]"
         >
           <button class="knocked-pins__button" v-on:click="getPin(pin - 1)">
             {{ pin - 1 }}
@@ -69,92 +69,54 @@
 </template>
 
 <script>
-// import func from "../../vue-temp/vue-editor-bridge";
 export default {
   name: "BowlingComponent",
   data() {
     return {
-      frames: [
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-        },
-        {
-          throwOne: "",
-          throwTwo: "",
-          throwThree: "",
-        },
-      ],
-      throwsLeft: 2,
-      frameNumber: 0,
-      showedPins: [
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-      ],
-      hiddenPins: [],
     };
   },
   methods: {
+    calculate: function calculate(pin) {
+      this.$store.state.scores[this.$store.state.frameNumber - 1] += pin;
+        if (this.$store.state.strike) {
+          this.$store.state.scores[this.$store.state.frameNumber - 1] += this.$store.state.bonus;
+        } else if (this.$store.state.spare) {
+          this.$store.state.scores[this.$store.state.frameNumber - 1] += this.$store.state.bonus;
+        }
+    },
     getPin: function(pin) {
-      if (this.frameNumber < 10) {
-        console.log(this.$store.state.example);
-        if (pin === 10) {
-          this.frames[this.frameNumber].throwOne = pin;
-          this.frameNumber++;
-        } else if (pin < 10 && this.throwsLeft === 2) {
-          this.frames[this.frameNumber].throwOne = pin;
-          this.throwsLeft--;
-          this.hiddenPins = this.showedPins.slice(11 - pin);
-          this.showedPins = this.showedPins.slice(pin);
-        } else if (pin < 10 && this.throwsLeft < 2) {
-          this.frames[this.frameNumber].throwTwo = pin;
-          this.frameNumber++;
-          this.throwsLeft++;
-          this.showedPins = this.showedPins.concat(this.hiddenPins);
+      if (this.$store.state.frameNumber < 10) {
+        if (pin === 10 && this.$store.state.throwsLeft === 2) {
+          this.$store.state.frames[this.$store.state.frameNumber].throwOne = pin;
+          this.$store.state.frameNumber++;
+          this.$store.state.strike = true;
+        }
+        if (pin === 10 && this.$store.state.throwsLeft < 2) {
+          this.$store.state.frames[this.$store.state.frameNumber].throwOne = pin;
+          this.$store.state.frameNumber++;
+          this.$store.state.scores[this.$store.state.frameNumber - 1] = pin;
+          this.$store.state.spare = true;
+        } else if (pin < 10 && this.$store.state.throwsLeft === 2) {
+          this.$store.state.frames[this.$store.state.frameNumber].throwOne = pin;
+          this.$store.state.throwsLeft--;
+          this.$store.state.hiddenPins = this.$store.state.showedPins.slice(11 - pin);
+          this.$store.state.showedPins = this.$store.state.showedPins.slice(pin);
+          this.$store.state.strike = false;
+        } else if (pin < 10 && this.$store.state.throwsLeft < 2) {
+          this.$store.state.frames[this.$store.state.frameNumber].throwTwo = pin;
+          this.$store.state.frameNumber++;
+          this.$store.state.throwsLeft++;
+          this.$store.state.showedPins = this.$store.state.showedPins.concat(this.$store.state.hiddenPins);
+          this.$store.state.strike = false;
+          if (this.$store.state.showedPins - pin != 1) {
+            this.$store.state.spare = false;
+          } else {
+            this.$store.state.spare = true;
+          }
         } else if (pin > 10) {
           console.log("error: pin > 10");
         }
+        // calculate(pin);
       } else {
         console.log("game over");
       }
@@ -164,16 +126,16 @@ export default {
     },
   },
   computed: {
-    getScore: function() {
-      const scores = this.frames.map(function(value) {
-        return Number(value.throwOne) + Number(value.throwTwo);
-      });
-      return scores;
-    },
-    getMainScore: function() {
-      const mainScore = this.getScore.reduce((a, b) => a + b, 0);
-      return mainScore;
-    },
+    // getScore: function() {
+    //   const scores = this.$store.state.frames.map(function(value) {
+    //     return Number(value.throwOne) + Number(value.throwTwo);
+    //   });
+    //   return scores;
+    // },
+    // getMainScore: function() {
+    //   const mainScore = this.getScore.reduce((a, b) => a + b, 0);
+    //   return mainScore;
+    // },
   },
 };
 </script>
@@ -327,10 +289,10 @@ export default {
 }
 // animation
 .flip-enter-active {
-  transition: opacity .2s linear, transform .6s linear;
+  transition: opacity 0.2s linear, transform 0.6s linear;
 }
 .flip-leave-active {
-  transition: opacity .2s linear, transform .2s linear;
+  transition: opacity 0.2s linear, transform 0.2s linear;
 }
 .flip-enter {
   opacity: 0;

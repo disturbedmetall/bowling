@@ -1,3 +1,3 @@
 module.exports = {
-  publicPath: '/project name/'
+  publicPath: '/bowling_calculator/'
 }
