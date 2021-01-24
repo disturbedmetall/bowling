@@ -8,7 +8,7 @@
         :key="pin"
         v-show="showedPins[pin - 1]"
       >
-        <button class="knocked-pins__button" v-on:click="getPin(pin - 1)">
+        <button class="knocked-pins__button" v-on:click="calculate(pin - 1)">
           {{ pin - 1 }}
         </button>
       </div>
@@ -22,7 +22,7 @@ import { mapState, mapMutations } from "vuex";
 export default {
   name: "KnockedPins",
   methods: {
-    ...mapMutations(["getPin"]),
+    ...mapMutations(["calculate"]),
   },
   computed: {
     ...mapState(["showedPins"]),
@@ -36,9 +36,9 @@ export default {
   flex-wrap: wrap;
   margin-bottom: 1rem;
 
-  // &__description {
-  //   margin-right: 1rem;
-  // }
+  &__description {
+    margin-right: 1rem;
+  }
 
   &__ammount {
     margin: 0.25rem;
