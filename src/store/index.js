@@ -77,40 +77,88 @@ export default new Vuex.Store({
     reload() {
       location.reload();
     },
+    renderInFrame(state, pins) {
+      if (state.frameNumber < 10) {
+        if (state.throwsLeft === 2) {
+          state.frames[state.frameNumber].throwOne = pins;
+          if (pins === 10) {
+            state.frameNumber++;
+            // setting strikes
+            if (state.fourBagger || state.turkey) {
+              state.fourBagger = true;
+              state.turkey = false;
+            } else if (state.double) {
+              state.turkey = true;
+              state.double = false;
+            } else if (state.strike) {
+              state.double = true;
+              state.strike = false;
+            } else {
+              state.strike = true;
+              state.spare = false;
+            }
+          } else {
+            state.throwsLeft--;
+            // Hiding buttons
+            state.hiddenPins = state.showedPins.slice(11 - pins);
+            state.showedPins = state.showedPins.slice(pins);
+            if (!state.bonus) {
+              state.fourBagger = false;
+              state.turkey = false;
+              state.double = false;
+              state.strike = false;
+            }
+          }
+        } else if (state.throwsLeft < 2) {
+          state.frames[state.frameNumber].throwTwo = pins;
+          state.frameNumber++;
+          state.throwsLeft++;
+          if (pins === 10) {
+            state.strike = false;
+            state.spare = 'true';
+          } else {
+            // Checking for spare
+            state.spare = (state.showedPins.length - pins == 1);
+            // Bringing buttons back
+            state.showedPins = state.showedPins.concat(state.hiddenPins);
+            if (state.frameNumber === 10 && !state.spare) {
+              state.showedPins = [];
+            }
+          }
+        }
+      } else if (state.frameNumber === 10) {
+        if (state.fourBagger || state.turkey || state.double || state.strike || state.spare) {
+          state.frames[9].throwThree = pins;
+        }
+        state.frameNumber++;
+        state.showedPins = [];
+      } else {
+        state.frameNumber++;
+        state.showedPins = [];
+        console.log("game over");
+      }
+    },
     calculate(state, pins) {
 
-      if (state.frameNumber < 10) {
-        // Adding bonus
-        if (state.fourBagger || state.turkey || state.double || state.strike || state.spare) {
-          state.bonus += pins;
-        }
-
+      if (state.frameNumber < 12) {
         // Case strike
         if (pins === 10 && state.throwsLeft === 2) {
-          state.frames[state.frameNumber].throwOne = pins;
-          state.frameNumber++;
-
-          if (state.fourBagger || state.turkey || state.double) {
+          console.log('strike');
+          if (state.fourBagger || state.turkey) {
             state.mainScore += (pins + state.bonus);
             state.bonus = pins;
           }
 
-          // setting strikes
-          if (state.fourBagger) {
+          // getting strikes
+          if (state.fourBagger || state.turkey) {
+            state.scores.pop();
+            state.scores.pop();
             state.scores.push(state.mainScore);
-          } else if (state.turkey) {
-            state.fourBagger = true;
-            state.turkey = false;
-            state.scores.push(state.mainScore);
+            state.scores.push('X');
+            state.scores.push('X');
           } else if (state.double) {
-            state.turkey = true;
-            state.double = false;
-            state.scores.pop();
-            state.scores.pop();
-            state.scores.push(state.mainScore);
+            state.scores.push('X');
           } else if (state.strike) {
-            state.double = true;
-            state.strike = false;
             state.scores.push('X');
           } else if (state.spare) {
             state.scores.pop();
@@ -118,118 +166,99 @@ export default new Vuex.Store({
             state.scores.push(state.mainScore);
             state.scores.push('X');
           } else {
-            state.strike = true;
             state.scores.push('X');
           }
         }
         // Case spare by second throw
         else if (pins === 10 && state.throwsLeft < 2) {
-          state.frames[state.frameNumber].throwOne = pins;
-          state.frameNumber++;
-          state.throwsLeft++;
+          console.log('spare by second');
           state.scores[state.frameNumber - 1] = '/';
-
-          state.strike = false;
-          state.spare = 'true';
         }
         // Case: first throw unlucky
-        else if (pins < 10 && state.throwsLeft === 2) {
-          // Check status
+        else if (pins < 10 && state.throwsLeft < 2) {
+          console.log('unluky');
           if (state.fourBagger || state.turkey || state.double) {
-            state.mainScore += (10 + state.bonus);
-            state.scores.push(state.mainScore);
-            state.scores.push('X');
-          } else if (!state.strike && !state.spare) {
+            state.scores.pop();
+            state.scores.pop();
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
+            state.scores.push('X');
+          } else if (state.strike) {
+            // state.scores.pop();
+            // state.mainScore += (pins + state.bonus);
+            // state.scores.push(state.mainScore);
+            // state.mainScore += pins;
+            // state.scores.push(state.mainScore);
+            // state.bonus = 0;
           } else if (state.spare) {
-            state.mainScore += state.bonus;
+            state.mainScore += (pins + state.bonus);
             state.scores.pop();
             state.scores.push(state.mainScore);
             state.mainScore += pins;
             state.scores.push(state.mainScore);
             state.bonus = 0;
-          }
-
-          state.frames[state.frameNumber].throwOne = pins;
-          state.throwsLeft--;
-          state.hiddenPins = state.showedPins.slice(11 - pins);
-          state.showedPins = state.showedPins.slice(pins);
-        }
-        // Case: second throw
-        else if (pins < 10 && state.throwsLeft < 2) {
-          state.scores.pop();
-
-          // Checking for spare
-          state.spare = (state.showedPins.length - pins == 1);
-
-          if (state.fourBagger || state.turkey || state.double) {
-            state.mainScore += state.bonus;
-            state.scores.push(state.mainScore);
-            state.mainScore += (state.bonus - 10);
+          } else {
+            state.mainScore += pins;
             state.scores.push(state.mainScore);
             state.bonus = 0;
-          } else if (state.strike) {
-            state.mainScore += (10 + state.bonus);
+          }
+        }
+        // Case: second throw
+        else if (pins < 10 && state.throwsLeft === 2) {
+          console.log('second throw');
+          state.scores.pop();
+          // Check status
+          if (state.fourBagger || state.turkey || state.double) {
+            state.mainScore += (pins + state.bonus - 10);
             state.scores.push(state.mainScore);
-            state.mainScore += state.bonus;
+            state.mainScore += (pins + state.bonus - 20);
+            state.scores.push(state.mainScore);
+            state.bonus = 0;
+          } else if (state.strike && !state.spare) {
+            state.mainScore += (pins + state.bonus);
+            state.scores.push(state.mainScore);
+            state.mainScore += (pins + state.bonus - 10);
             state.scores.push(state.mainScore);
             state.bonus = 0;
           } else if (state.spare) {
             state.scores.push('/');
-            state.bonus = pins;
+            state.bonus = 0;
           } else {
             state.mainScore += pins;
             state.scores.push(state.mainScore);
+            state.bonus = 0;
           }
-          state.fourBagger = false;
-          state.turkey = false;
-          state.double = false;
-          state.strike = false;
-
-          state.frames[state.frameNumber].throwTwo = pins;
-          state.throwsLeft++;
-          state.showedPins = state.showedPins.concat(state.hiddenPins);
-          
-          if (state.frameNumber === 9 && !state.spare) {
-            state.showedPins = [];
-            state.frameNumber++;
-          }
-          state.frameNumber++;
-          
-        } else if (pins > 12) {
+        }
+        // Error case
+        else if (pins > 12) {
           console.log("error: pins > 12");
         }
 
-      // Additional throw
-      } else if (state.frameNumber === 10) {
-          // Calculate score
-        if (state.fourBagger || state.turkey || state.double) {
-          state.bonus = pins * 2;
-          state.mainScore += (pins + state.bonus);
-          state.frameNumber++;
-          state.scores.push(state.mainScore);
-        } else if (state.strike) {
-          state.bonus = pins;
-          state.frameNumber++;
-        } else if (state.spare) {
-          state.bonus = pins;
-          state.scores.pop();
-          state.frameNumber++;
-        } else {
-          state.showedPins = []
-          state.mainScore += pins;
-          state.frameNumber += 2;
+        // Additional throw
+        if (state.frameNumber === 11) {
+          console.log('additional throw');
+          // Calculating score
+          if (state.fourBagger || state.turkey || state.double) {
+            state.mainScore += (pins + state.bonus + 10);
+            state.scores.pop();
+            state.scores.pop();
+            state.scores.push(state.mainScore);
+          } else if (state.strike) {
+            state.bonus = pins;
+          } else if (state.spare) {
+            state.scores.pop();
+            state.bonus = pins;
+            state.mainScore += (pins + state.bonus);
+            state.scores.push(state.mainScore);
+          } else {
+            state.mainScore += pins;
+          }
         }
 
-        state.frames[9].throwThree = pins;
-        // Score asignment
-        state.mainScore += (pins + state.bonus);
-        state.scores.push(state.mainScore);
-        state.frameNumber++;
-        state.showedPins = []
-      } else {
-        console.log("game over");
+        // Adding bonus
+        if (state.fourBagger || state.turkey || state.double || state.strike || state.spare) {
+          state.bonus += pins;
+        }
       }
     },
   },
