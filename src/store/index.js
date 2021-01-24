@@ -78,27 +78,24 @@ export default new Vuex.Store({
       location.reload();
     },
     getPin(state, pin) {
+
       if (state.frameNumber < 10) {
-         // Calculate score
-         if (state.fourBagger) {
-          state.bonus = pin * 2;
-          state.mainScore += pin;
-          state.mainScore += state.bonus;
-        } else if (state.turkey) {
-          state.bonus = pin * 2;
-          state.mainScore += pin;
-          state.mainScore += state.bonus;
-        } else if (state.double) {
-          state.bonus = pin * 2;
-          state.mainScore += pin;
-          state.mainScore += state.bonus;
+        // Calculate score
+        if (state.fourBagger || state.turkey || state.double) {
+          state.bonus += pin;
         } else if (state.strike) {
           state.bonus += pin;
         }
+
         // Case strike
         if (pin === 10 && state.throwsLeft === 2) {
           state.frames[state.frameNumber].throwOne = pin;
           state.frameNumber++;
+
+          if (state.fourBagger || state.turkey || state.double) {
+            state.mainScore += (pin + state.bonus);
+            state.bonus = pin;
+          }
 
           // setting strikes
           if (state.fourBagger) {
@@ -119,8 +116,7 @@ export default new Vuex.Store({
             state.scores.push('X');
           } else if (state.spare) {
             state.scores.pop();
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
+            state.mainScore += (pin + state.bonus);
             state.scores.push(state.mainScore);
             state.scores.push('X');
           } else {
@@ -137,121 +133,104 @@ export default new Vuex.Store({
 
           state.strike = false;
           state.spare = 'true';
-        } 
+        }
         // Case: first throw unlucky
         else if (pin < 10 && state.throwsLeft === 2) {
-          // Calculate score
-          
-          // Check strike / spare
-          if (!state.strike && !state.spare) {
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
+          // Check status
+          if (state.fourBagger || state.turkey || state.double) {
+            state.mainScore += (10 + state.bonus);
+            state.scores.push(state.mainScore);
+            state.scores.push('X');
+          } else if (!state.strike && !state.spare) {
+            state.mainScore += (pin + state.bonus);
             state.scores.push(state.mainScore);
           } else if (state.spare) {
-            state.bonus += pin;
-            state.mainScore += state.bonus;
+            state.mainScore += (pin + state.bonus);
             state.scores.pop();
             state.scores.push(state.mainScore);
             state.mainScore += pin;
             state.scores.push(state.mainScore);
             state.bonus = 0;
-          } 
+          }
 
           state.frames[state.frameNumber].throwOne = pin;
           state.throwsLeft--;
           state.hiddenPins = state.showedPins.slice(11 - pin);
           state.showedPins = state.showedPins.slice(pin);
-
-          state.fourBagger = false;
-          state.turkey = false;
-          state.double = false;
-        } 
+        }
         // Case: second throw
         else if (pin < 10 && state.throwsLeft < 2) {
-          // Checking for spare
-          state.spare = (state.showedPins.length - pin == 1);
-          
-          if (state.strike) {
-            state.mainScore += 10;
+          if (state.fourBagger || state.turkey || state.double) {
             state.mainScore += state.bonus;
             state.scores.pop();
-            state.scores.push(state.mainScore); 
+            state.scores.push(state.mainScore);
+            state.mainScore += (state.bonus - 10);
+            state.scores.push(state.mainScore);
+            state.bonus = 0;
+          } else if (state.strike) {
+            state.mainScore += (10 + state.bonus);
+            state.scores.pop();
+            state.scores.push(state.mainScore);
             state.mainScore += state.bonus;
-            state.scores.push(state.mainScore); 
+            state.scores.push(state.mainScore);
             state.bonus = 0;
           } else if (state.spare) {
             state.scores.pop();
-            state.scores.push('/'); 
+            state.scores.push('/');
             state.bonus += pin;
           } else {
             state.mainScore += pin;
             state.scores.pop();
-            state.scores.push(state.mainScore); 
+            state.scores.push(state.mainScore);
           }
+          state.fourBagger = false;
+          state.turkey = false;
+          state.double = false;
           state.strike = false;
-          
+
           state.frames[state.frameNumber].throwTwo = pin;
-          state.frameNumber++;
           state.throwsLeft++;
           state.showedPins = state.showedPins.concat(state.hiddenPins);
-
+          
+          // Checking for spare
+          state.spare = (state.showedPins.length - pin == 1);
+          if (state.frameNumber === 9 && !state.spare) {
+            state.showedPins = [];
+            state.frameNumber++;
+          }
+          state.frameNumber++;
+          
         } else if (pin > 12) {
           console.log("error: pin > 12");
         }
+
+      // Additional throw
       } else if (state.frameNumber === 10) {
-        if (pin !== 10 && state.throwsLeft === 2) {
-          state.frameNumber += 2;
-        } else {
-          state.frameNumber++;
           // Calculate score
-          if (state.fourBagger) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.turkey) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.double) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.strike) {
-            state.bonus = pin;
-          } else if (state.spare) {
-            state.bonus = pin;
-          } else {
-            state.mainScore += pin;
-          }
-          //
+        if (state.fourBagger || state.turkey || state.double) {
+          state.bonus = pin * 2;
+          state.mainScore += (pin + state.bonus);
+          state.frameNumber++;
+          state.scores.push(state.mainScore);
+        } else if (state.strike) {
+          state.bonus = pin;
+          state.frameNumber++;
+        } else if (state.spare) {
+          state.bonus = pin;
+          state.scores.pop();
+          state.frameNumber++;
+        } else {
+          state.showedPins = []
+          state.mainScore += pin;
+          state.frameNumber += 2;
         }
-        state.frames[9].throwTwo = pin;
-        state.scores.push(state.mainScore);
-      } else if (state.frameNumber === 11) {
-        //  Calculate score
-          if (state.fourBagger) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.turkey) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.double) {
-            state.bonus = pin * 2;
-            state.mainScore += pin;
-            state.mainScore += state.bonus;
-          } else if (state.strike) {
-            state.bonus = pin;
-          } else if (state.spare) {
-            state.bonus = pin;
-          } else {
-            state.mainScore += pin;
-          }
-          // 
+
         state.frames[9].throwThree = pin;
+        // Score asignment
+        state.mainScore += (pin + state.bonus);
         state.scores.push(state.mainScore);
         state.frameNumber++;
+        state.showedPins = []
       } else {
         console.log("game over");
       }

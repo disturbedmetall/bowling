@@ -36,9 +36,9 @@ export default {
   flex-wrap: wrap;
   margin-bottom: 1rem;
 
-  &__description {
-    margin-right: 1rem;
-  }
+  // &__description {
+  //   margin-right: 1rem;
+  // }
 
   &__ammount {
     margin: 0.25rem;
