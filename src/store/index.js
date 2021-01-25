@@ -48,6 +48,7 @@ export default new Vuex.Store({
         throwThree: "",
       },
     ],
+    scores: [],
     showedPins: [
       true,
       true,
@@ -61,10 +62,8 @@ export default new Vuex.Store({
       true,
       true,
     ],
-    hiddenPins: [],
     throwsLeft: 2,
     frameNumber: 0,
-    scores: [],
     mainScore: 0,
     fourBagger: false,
     turkey: false,
@@ -100,8 +99,13 @@ export default new Vuex.Store({
           } else {
             state.throwsLeft--;
             // Hiding buttons
-            state.hiddenPins = state.showedPins.slice(11 - pins);
-            state.showedPins = state.showedPins.slice(pins);
+            state.showedPins = state.showedPins.map((it, index) => {
+              if (index > (11 - pins)) {
+                it = false;
+              }
+              return it;
+            })
+
             if (!state.bonus) {
               state.fourBagger = false;
               state.turkey = false;
@@ -120,7 +124,10 @@ export default new Vuex.Store({
             // Checking for spare
             state.spare = (state.showedPins.length - pins == 1);
             // Bringing buttons back
-            state.showedPins = state.showedPins.concat(state.hiddenPins);
+            state.showedPins = state.showedPins.map(it => {
+              it = true;
+              return it;
+            })
             if (state.frameNumber === 10 && !state.spare) {
               state.showedPins = [];
             }
