@@ -1,10 +1,10 @@
-import { mount } from '@vue/test-utils'
-import Heading from '@/components/Heading.vue'
+import { mount, shallow, shallowMount, createLocalVue } from '@vue/test-utils'
+import store from '@/store'  
+// import knockedPins from '@/components/knockedPins.vue'
 
-describe('test', () => {
-  it('just find div', () => {
-    const wrapper = mount(Heading)
-    expect(wrapper.contains('div')).toBe(true)
+describe('store', () => {
+  it('throwsLeft = 2', () => {
+    expect(store.state.throwsLeft).toBe(2);
   })
 })
 
