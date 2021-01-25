@@ -49,6 +49,7 @@ export default new Vuex.Store({
       },
     ],
     scores: [],
+    mainScore: 0,
     showedPins: [
       true,
       true,
@@ -64,8 +65,6 @@ export default new Vuex.Store({
     ],
     throwsLeft: 2,
     frameNumber: 0,
-    mainScore: 0,
-    fourBagger: false,
     turkey: false,
     double: false,
     strike: false,
@@ -83,10 +82,7 @@ export default new Vuex.Store({
           if (pins === 10) {
             state.frameNumber++;
             // setting strikes
-            if (state.fourBagger || state.turkey) {
-              state.fourBagger = true;
-              state.turkey = false;
-            } else if (state.double) {
+            if (state.turkey || state.double) {
               state.turkey = true;
               state.double = false;
             } else if (state.strike) {
@@ -107,7 +103,6 @@ export default new Vuex.Store({
             })
 
             if (!state.bonus) {
-              state.fourBagger = false;
               state.turkey = false;
               state.double = false;
               state.strike = false;
@@ -134,7 +129,7 @@ export default new Vuex.Store({
           }
         }
       } else if (state.frameNumber === 10) {
-        if (state.fourBagger || state.turkey || state.double || state.strike || state.spare) {
+        if (state.turkey || state.double || state.strike || state.spare) {
           state.frames[9].throwThree = pins;
         }
         state.frameNumber++;
@@ -150,14 +145,13 @@ export default new Vuex.Store({
       if (state.frameNumber < 12) {
         // Case strike
         if (pins === 10 && state.throwsLeft === 2) {
-          console.log('strike');
-          if (state.fourBagger || state.turkey) {
+          if (state.turkey) {
             state.mainScore += (pins + state.bonus);
             state.bonus = pins;
           }
 
           // getting strikes
-          if (state.fourBagger || state.turkey) {
+          if (state.turkey) {
             state.scores.pop();
             state.scores.pop();
             state.scores.push(state.mainScore);
@@ -178,25 +172,16 @@ export default new Vuex.Store({
         }
         // Case spare by second throw
         else if (pins === 10 && state.throwsLeft < 2) {
-          console.log('spare by second');
           state.scores[state.frameNumber - 1] = '/';
         }
         // Case: first throw unlucky
         else if (pins < 10 && state.throwsLeft < 2) {
-          console.log('unluky');
-          if (state.fourBagger || state.turkey || state.double) {
+          if (state.turkey || state.double) {
             state.scores.pop();
             state.scores.pop();
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
             state.scores.push('X');
-          } else if (state.strike) {
-            // state.scores.pop();
-            // state.mainScore += (pins + state.bonus);
-            // state.scores.push(state.mainScore);
-            // state.mainScore += pins;
-            // state.scores.push(state.mainScore);
-            // state.bonus = 0;
           } else if (state.spare) {
             state.mainScore += (pins + state.bonus);
             state.scores.pop();
@@ -204,7 +189,7 @@ export default new Vuex.Store({
             state.mainScore += pins;
             state.scores.push(state.mainScore);
             state.bonus = 0;
-          } else {
+          } else if (!state.strike) {
             state.mainScore += pins;
             state.scores.push(state.mainScore);
             state.bonus = 0;
@@ -212,16 +197,16 @@ export default new Vuex.Store({
         }
         // Case: second throw
         else if (pins < 10 && state.throwsLeft === 2) {
-          console.log('second throw');
           state.scores.pop();
           // Check status
-          if (state.fourBagger || state.turkey || state.double) {
+          if (state.turkey || state.double) {
             state.mainScore += (pins + state.bonus - 10);
             state.scores.push(state.mainScore);
             state.mainScore += (pins + state.bonus - 20);
             state.scores.push(state.mainScore);
             state.bonus = 0;
           } else if (state.strike && !state.spare) {
+            state.scores.pop();
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
             state.mainScore += (pins + state.bonus - 10);
@@ -243,9 +228,8 @@ export default new Vuex.Store({
 
         // Additional throw
         if (state.frameNumber === 11) {
-          console.log('additional throw');
           // Calculating score
-          if (state.fourBagger || state.turkey || state.double) {
+          if (state.turkey || state.double) {
             state.mainScore += (pins + state.bonus + 10);
             state.scores.pop();
             state.scores.pop();
@@ -263,7 +247,7 @@ export default new Vuex.Store({
         }
 
         // Adding bonus
-        if (state.fourBagger || state.turkey || state.double || state.strike || state.spare) {
+        if (state.turkey || state.double || state.strike || state.spare) {
           state.bonus += pins;
         }
       }
