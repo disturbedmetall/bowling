@@ -63,8 +63,7 @@ export default new Vuex.Store({
       true,
       true,
     ],
-    throwsLeft: 2,
-    frameNumber: 0,
+    throwNumber: 0,
     turkey: false,
     double: false,
     strike: false,
@@ -76,75 +75,70 @@ export default new Vuex.Store({
       location.reload();
     },
     renderInFrame(state, pins) {
-      if (state.frameNumber < 10) {
-        if (state.throwsLeft === 2) {
-          state.frames[state.frameNumber].throwOne = pins;
-          if (pins === 10) {
-            state.frameNumber++;
-            // setting strikes
-            if (state.turkey || state.double) {
-              state.turkey = true;
-              state.double = false;
-            } else if (state.strike) {
-              state.double = true;
-              state.strike = false;
-            } else {
-              state.strike = true;
-              state.spare = false;
-            }
-          } else {
-            state.throwsLeft--;
+      function getFrameNumber() { return parseInt(state.throwNumber / 2) }
+
+      if (state.throwNumber < 20) {
+        if (!(state.throwNumber % 2)) {
+          state.frames[getFrameNumber()].throwOne = pins;
+          if (pins !== 10) {
             // Hiding buttons
             state.showedPins = state.showedPins.map((it, index) => {
-              if (index > (11 - pins)) {
+              if (index > (10 - pins)) {
                 it = false;
               }
               return it;
             })
-
-            if (!state.bonus) {
-              state.turkey = false;
-              state.double = false;
-              state.strike = false;
-            }
           }
-        } else if (state.throwsLeft < 2) {
-          state.frames[state.frameNumber].throwTwo = pins;
-          state.frameNumber++;
-          state.throwsLeft++;
-          if (pins === 10) {
-            state.strike = false;
-            state.spare = 'true';
-          } else {
+        } else if (state.throwNumber % 2) {
+          state.frames[getFrameNumber()].throwTwo = pins;
+          // state.throwNumber++;
+          if (pins !== 10) {
             // Checking for spare
-            state.spare = (state.showedPins.length - pins == 1);
+            state.spare = (!state.showedPins[pins + 1]);
             // Bringing buttons back
             state.showedPins = state.showedPins.map(it => {
               it = true;
               return it;
             })
-            if (state.frameNumber === 10 && !state.spare) {
+            if (state.throwNumber === 20 && !state.spare) {
               state.showedPins = [];
             }
           }
         }
-      } else if (state.frameNumber === 10) {
+      } else if (state.throwNumber === 20) {
         if (state.turkey || state.double || state.strike || state.spare) {
           state.frames[9].throwThree = pins;
+        } else {
+          state.frames[9].throwTwo = pins;
         }
-        state.frameNumber++;
         state.showedPins = [];
       } else {
-        state.frameNumber++;
         state.showedPins = [];
         console.log("game over");
       }
     },
+    checkStrike(state, pins) {
+      if (pins === 10 && !(state.throwNumber % 2)) {
+        // setting strikes
+        if (state.turkey || state.double) {
+          state.turkey = true;
+          state.double = false;
+        } else if (state.strike) {
+          state.double = true;
+          state.strike = false;
+        } else {
+          state.strike = true;
+        }
+      } else if (pins !== 10 && !state.bonus) {
+        state.turkey = false;
+        state.double = false;
+        state.strike = false;
+      }
+    },
     calculate(state, pins) {
-
-      if (state.frameNumber < 12) {
+      if (state.throwNumber < 20) {
         // Case strike
-        if (pins === 10 && state.throwsLeft === 2) {
+        if (pins === 10 && !(state.throwNumber % 2)) {
           if (state.turkey) {
             state.mainScore += (pins + state.bonus);
             state.bonus = pins;
@@ -159,9 +153,14 @@ export default new Vuex.Store({
             state.scores.push('X');
           } else if (state.double) {
             state.scores.push('X');
-          } else if (state.strike) {
+          } else if (state.strike && state.spare) {
+            state.scores.pop();
+            state.mainScore += (pins + state.bonus);
+            state.scores.push(state.mainScore);
             state.scores.push('X');
-          } else if (state.spare) {
+          } else if (state.strike && !state.spare) {
+            state.scores.push('X');
+          } else if (state.spare && !state.strike) {
             state.scores.pop();
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
@@ -171,11 +170,13 @@ export default new Vuex.Store({
           }
         }
         // Case spare by second throw
-        else if (pins === 10 && state.throwsLeft < 2) {
-          state.scores[state.frameNumber - 1] = '/';
+        else if (pins === 10 && state.throwNumber % 2) {
+          alert("Case spare by second throw");
+          state.scores.pop();
+          state.scores.push(state.mainScore);
         }
         // Case: first throw unlucky
-        else if (pins < 10 && state.throwsLeft < 2) {
+        else if (pins < 10 && !(state.throwNumber % 2)) {
           if (state.turkey || state.double) {
             state.scores.pop();
             state.scores.pop();
@@ -196,7 +197,7 @@ export default new Vuex.Store({
           }
         }
         // Case: second throw
-        else if (pins < 10 && state.throwsLeft === 2) {
+        else if (pins < 10 && state.throwNumber % 2) {
           state.scores.pop();
           // Check status
           if (state.turkey || state.double) {
@@ -205,8 +206,9 @@ export default new Vuex.Store({
             state.mainScore += (pins + state.bonus - 20);
             state.scores.push(state.mainScore);
             state.bonus = 0;
+            state.turkey = false;
+            state.double = false;
           } else if (state.strike && !state.spare) {
-            state.scores.pop();
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
             state.mainScore += (pins + state.bonus - 10);
@@ -225,31 +227,42 @@ export default new Vuex.Store({
         else if (pins > 12) {
           console.log("error: pins > 12");
         }
-
-        // Additional throw
-        if (state.frameNumber === 11) {
-          // Calculating score
-          if (state.turkey || state.double) {
-            state.mainScore += (pins + state.bonus + 10);
-            state.scores.pop();
-            state.scores.pop();
-            state.scores.push(state.mainScore);
-          } else if (state.strike) {
-            state.bonus = pins;
-          } else if (state.spare) {
-            state.scores.pop();
-            state.bonus = pins;
-            state.mainScore += (pins + state.bonus);
-            state.scores.push(state.mainScore);
-          } else {
-            state.mainScore += pins;
-          }
+      }
+      // Additional throw
+      if (state.throwNumber === 20) {
+        // Calculating score
+        if (state.turkey || state.double) {
+          state.mainScore += pins + state.bonus;
+          state.scores.pop();
+          state.scores.pop();
+          state.scores.push(state.mainScore);
+          state.mainScore += pins + state.bonus;
+          state.scores.push(state.mainScore);
+        } else if (state.strike) {
+          state.bonus = pins;
+        } else if (state.spare) {
+          state.scores.pop();
+          state.mainScore += (pins + state.bonus);
+          state.scores.push(state.mainScore);
+        } else {
+          state.mainScore += pins;
         }
+      }
 
-        // Adding bonus
-        if (state.turkey || state.double || state.strike || state.spare) {
-          state.bonus += pins;
-        }
+      // Adding bonus
+      if (state.turkey || state.double || state.strike || state.spare) {
+        state.bonus += pins;
+      }
+    },
+    checkSpare(state, pins) {
+      if (pins === 10 && state.throwNumber % 2) {
+        state.strike ? state.spare = false : state.spare = 'true';
+      }
+    },
+    changeThrows(state, pins) {
+      state.throwNumber++;
+      if (state.throwNumber % 2 && pins === 10) {
+        state.throwNumber++;
       }
     },
   },
