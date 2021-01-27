@@ -183,7 +183,7 @@ export default new Vuex.Store({
               it = true;
               return it;
             })
-            if (state.throwNumber === 20 && !state.spare) {
+            if (state.throwNumber === 19 && !state.spare) {
               state.showedPins = [];
             }
           }
