@@ -103,19 +103,16 @@ describe('Calculate', () => {
       realStore.commit('renderInFrame', 10)
       realStore.commit('checkStrike', 10)
       realStore.commit('calculate', 10)
-      realStore.commit('checkSpare', 10)
       realStore.commit('changeThrows', 10)
 
       realStore.commit('renderInFrame', 2)
       realStore.commit('checkStrike', 2)
       realStore.commit('calculate', 2)
-      realStore.commit('checkSpare', 2)
       realStore.commit('changeThrows', 2)
 
       realStore.commit('renderInFrame', 2)
       realStore.commit('checkStrike', 2)
       realStore.commit('calculate', 2)
-      realStore.commit('checkSpare', 2)
       realStore.commit('changeThrows', 2)
     expect(realStore.state.mainScore).toBe(18);
     realStore.commit('reload')
@@ -126,19 +123,16 @@ describe('Calculate', () => {
       realStore.commit('renderInFrame', 4)
       realStore.commit('checkStrike', 4)
       realStore.commit('calculate', 4)
-      realStore.commit('checkSpare', 4)
       realStore.commit('changeThrows', 4)
 
       realStore.commit('renderInFrame', 6)
       realStore.commit('checkStrike', 6)
       realStore.commit('calculate', 6)
-      realStore.commit('checkSpare', 6)
       realStore.commit('changeThrows', 6)
 
       realStore.commit('renderInFrame', 2)
       realStore.commit('checkStrike', 2)
       realStore.commit('calculate', 2)
-      realStore.commit('checkSpare', 2)
       realStore.commit('changeThrows', 2)
     expect(realStore.state.mainScore).toBe(14);
     realStore.commit('reload')
@@ -150,7 +144,6 @@ describe('Calculate', () => {
       realStore.commit('renderInFrame', 10)
       realStore.commit('checkStrike', 10)
       realStore.commit('calculate', 10)
-      realStore.commit('checkSpare', 10)
       realStore.commit('changeThrows', 10)
     }
     expect(realStore.state.mainScore).toBe(300);
@@ -163,7 +156,6 @@ describe('Calculate', () => {
       realStore.commit('renderInFrame', 5)
       realStore.commit('checkStrike', 5)
       realStore.commit('calculate', 5)
-      realStore.commit('checkSpare', 5)
       realStore.commit('changeThrows', 5)
     }
     expect(realStore.state.mainScore).toBe(150);
@@ -171,21 +163,32 @@ describe('Calculate', () => {
   })
 })
 describe('Calculate', () => {
-  it('4|0 should give the output 40', () => {
-    for (let index = 0; index < 10; index++) {
+  it('strike, spare, 4|0 should give the output 38', () => {
+      realStore.commit('renderInFrame', 10)
+      realStore.commit('checkStrike', 10)
+      realStore.commit('calculate', 10)
+      realStore.commit('changeThrows', 10)
+
+      realStore.commit('renderInFrame', 5)
+      realStore.commit('checkStrike', 5)
+      realStore.commit('calculate', 5)
+      realStore.commit('changeThrows', 5)
+
+      realStore.commit('renderInFrame', 5)
+      realStore.commit('checkStrike', 5)
+      realStore.commit('calculate', 5)
+      realStore.commit('changeThrows', 5)
+
       realStore.commit('renderInFrame', 4)
       realStore.commit('checkStrike', 4)
       realStore.commit('calculate', 4)
-      realStore.commit('checkSpare', 4)
       realStore.commit('changeThrows', 4)
 
       realStore.commit('renderInFrame', 0)
       realStore.commit('checkStrike', 0)
       realStore.commit('calculate', 0)
-      realStore.commit('checkSpare', 0)
       realStore.commit('changeThrows', 0)
-    }
-    expect(realStore.state.mainScore).toBe(40);
+    expect(realStore.state.mainScore).toBe(38);
     realStore.commit('reload')
   })
 })
