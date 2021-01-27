@@ -138,6 +138,26 @@ export default new Vuex.Store({
       state.spare = false;
       state.bonus = 0;
     },
+    checkStrike(state, pins) {
+      if (pins === 10 && !(state.throwNumber % 2)) {
+        // setting strikes
+        if (state.turkey || state.double) {
+          state.turkey = true;
+          state.double = false;
+        } else if (state.strike) {
+          state.double = true;
+          state.strike = false;
+        } else {
+          state.strike = true;
+        }
+      } else if (pins !== 10 && !state.bonus) {
+        state.turkey = false;
+        state.double = false;
+        state.strike = false;
+      } else if (state.spare) {
+        state.strike = false;
+      }
+    },
     renderInFrame(state, pins) {
       function getFrameNumber() { return parseInt(state.throwNumber / 2) }
 
@@ -179,24 +199,6 @@ export default new Vuex.Store({
         state.showedPins = [];
         console.log("game over");
       }
-    },
-    checkStrike(state, pins) {
-      if (pins === 10 && !(state.throwNumber % 2)) {
-        // setting strikes
-        if (state.turkey || state.double) {
-          state.turkey = true;
-          state.double = false;
-        } else if (state.strike) {
-          state.double = true;
-          state.strike = false;
-        } else {
-          state.strike = true;
-        }
-      } else if (pins !== 10 && !state.bonus) {
-        state.turkey = false;
-        state.double = false;
-        state.strike = false;
-      } 
     },
     calculate(state, pins) {
       if (state.throwNumber < 20) {
@@ -288,9 +290,9 @@ export default new Vuex.Store({
           } else if (state.strike && state.spare) {
             state.mainScore += (pins + state.bonus);
             state.scores.push(state.mainScore);
-            state.mainScore += (pins + state.bonus - 10);
-            state.scores.push(state.mainScore);
-            state.bonus = 0;
+            // state.mainScore += (pins + state.bonus - 10);
+            state.scores.push('/');
+            state.bonus = 10 - pins;
           } else if (state.spare) {
             state.scores.push('/');
             state.bonus = 0;
@@ -327,9 +329,7 @@ export default new Vuex.Store({
       }
       if (pins === 10 && state.throwNumber % 2) {
         state.spare = true;
-      } else if (pins !== 10 && state.strike && state.throwNumber % 2) {
-        state.spare = false
-      }
+      } 
 
       // Adding bonus
       if (state.turkey || state.double || state.strike || state.spare) {
