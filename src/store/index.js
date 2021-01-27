@@ -71,8 +71,72 @@ export default new Vuex.Store({
     bonus: 0,
   },
   mutations: {
-    reload() {
-      location.reload();
+    reload(state) {
+      // location.reload();
+      state.frames = [
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+        },
+        {
+          throwOne: "",
+          throwTwo: "",
+          throwThree: "",
+        },
+      ];
+      state.scores = [];
+      state.mainScore = 0;
+      state.showedPins = [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+      ];
+      state.throwNumber = 0;
+      state.turkey = false;
+      state.double = false;
+      state.strike = false;
+      state.spare = false;
+      state.bonus = 0;
     },
     renderInFrame(state, pins) {
       function getFrameNumber() { return parseInt(state.throwNumber / 2) }
